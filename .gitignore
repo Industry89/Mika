@@ -21,3 +21,12 @@ CLAUDE.md
 __pycache__/
 *.py[cod]
 *.egg-info/
+
+# Fork: signing material never goes into this public repo
+keystore/
+*.p12
+*.jks
+*.keystore
+*.pem
+*.key
+password.txt

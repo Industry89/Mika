@@ -52,7 +52,26 @@ android {
     // 评测任务集(仓库根目录 eval/tasks)打进测试包的 assets,真机评测跑器从那里读题
     sourceSets.getByName("androidTest").assets.srcDir(rootProject.file("eval/tasks"))
 
+    // Fork: release signing key. CI restores keystore/mika.p12 from a repository secret and passes the
+    // password in KEYSTORE_PASSWORD; the key and password are never committed (keystore/ is gitignored).
+    val forkKeystore = rootProject.file("keystore/mika.p12")
+    val forkKeystorePassword = System.getenv("KEYSTORE_PASSWORD")?.takeIf { it.isNotEmpty() }
+    signingConfigs {
+        if (forkKeystore.exists() && forkKeystorePassword != null) {
+            create("fork") {
+                storeFile = forkKeystore
+                storeType = "pkcs12"
+                storePassword = forkKeystorePassword
+                keyAlias = "mika"
+                keyPassword = forkKeystorePassword
+            }
+        }
+    }
+
     buildTypes {
+        getByName("release") {
+            signingConfig = signingConfigs.findByName("fork")
+        }
         // 真机验收时并排安装,保留发行版和用户数据;默认构建标识不变。
         if (providers.gradleProperty("devInstall").isPresent) getByName("debug") {
             applicationIdSuffix = ".dev"
